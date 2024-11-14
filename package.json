@@ -1,0 +1,38 @@
+{
+  "name": "prosthetic-api",
+  "version": "1.0.0",
+  "description": "Middleware for the prostheticsync platform and application",
+  "main": "app.js",
+  "type": "module",
+  "scripts": {
+    "start": "node app.js",
+    "test": "mocha --config=.mocharc.json",
+    "allure": "allure generate --clean && allure open"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+ssh://git@gitlab.com/prostethicsync/prosthetic-api.git"
+  },
+  "keywords": [
+    "prosthetic",
+    "iot",
+    "teleton"
+  ],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://gitlab.com/prostethicsync/prosthetic-api/issues"
+  },
+  "homepage": "https://gitlab.com/prostethicsync/prosthetic-api#readme",
+  "dependencies": {
+    "argon2": "^0.41.1",
+    "cors": "^2.8.5",
+    "express": "^4.21.1",
+    "pg-promise": "^11.10.2"
+  },
+  "devDependencies": {
+    "chai": "^5.1.2",
+    "mocha": "^10.8.2",
+    "supertest": "^7.0.0"
+  }
+}

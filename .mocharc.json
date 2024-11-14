@@ -1,0 +1,18 @@
+{
+  "diff": true,
+  "extension": [
+    "js"
+  ],
+  "slow": 1500,
+  "timeout": 20000,
+  "recursive": true,
+  "package": "./package.json",
+  "reporter": "spec",
+  "reporterOptions": [
+    "resultsDir=allure-results"
+  ],
+  "spec": [
+    "tests/**/*.test.js"
+  ],
+  "ui": "bdd"
+}

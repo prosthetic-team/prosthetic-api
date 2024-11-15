@@ -1,13 +1,16 @@
 import pgPromise from 'pg-promise';
+import dotenv from 'dotenv';
+
+dotenv.config();
 
 const pgp = pgPromise();
 
 const db = pgp({
-    user: 'psync',
-    host: 'localhost',
-    database: 'psync_db',
-    password: 'psync123',
-    port: 5432
+    user: process.env.DB_USER,
+    host: process.env.DB_HOST,
+    database: process.env.DB_DATABASE,
+    password: process.env.DB_PASSWORD,
+    port: parseInt(process.env.DB_PORT, 10)
 });
 
 db.none(`

@@ -60,11 +60,27 @@ export const deleteUser = async (id) => {
     }
 };
 
+export const loginUser = async (email, password, callback) => {
+    try {
+        const query = 'SELECT * FROM users WHERE email = ?';
+        const [user] = await db.query(query, [email]);
+
+        if (user && await bcrypt.compare(password, user.password)) {
+            callback(null, { id: user.id, name: user.name, email: user.email });
+        } else {
+            callback(new Error('Invalid credentials'));
+        }
+    } catch (error) {
+        callback(error);
+    }
+};
+
 // Exportar todas las funciones como un objeto para importación predeterminada
 export default {
     insertUser,
     getAllUsers,
     getUserById,
     updateUser,
-    deleteUser
+    deleteUser,
+    loginUser
 };

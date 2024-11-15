@@ -7,7 +7,9 @@ import {
     testDeleteUser,
     testGetAllUsers,
     testGetUserById,
-    testUpdateUser
+    testUpdateUser,
+    testLoginUserSuccessfully,
+    testLoginUserInvalidCredentials
 } from "./unit-functions.js";
 
 // Clear the database before running tests
@@ -17,27 +19,17 @@ before((done) => {
 
 // User-related tests
 
-describe('Prueba unitaria para crear usuario', () => {
+describe('Pruebas unitarias para CRUD de usuarios', () => {
     it('Debería permitir crear un usuario correctamente', testCreateUserSuccessfully);
-});
-
-describe('Prueba unitaria para crear usuario', () => {
     it('No debería permitir crear un usuario con campos faltantes', testCreateUserMissingFields);
-});
-
-describe('Prueba unitaria para obtener todos los usuarios', () => {
     it('Debería obtener todos los usuarios', testGetAllUsers);
-});
-
-describe('Prueba unitaria para obtener usuario por ID', () => {
     it('Debería obtener un usuario por ID', testGetUserById);
-});
-
-describe('Prueba unitaria para actualizar usuario', () => {
     it('Debería actualizar un usuario correctamente', testUpdateUser);
-});
-
-describe('Prueba unitaria para eliminar usuario', () => {
     it('Debería eliminar un usuario correctamente', testDeleteUser);
+
 });
 
+describe('Prueba unitaria para login de usuario', () => {
+    it('Debería permitir login con credenciales válidas', testLoginUserSuccessfully);
+    it('No debería permitir login con credenciales inválidas', testLoginUserInvalidCredentials);
+});

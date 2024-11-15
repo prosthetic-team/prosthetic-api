@@ -72,3 +72,25 @@ export const deleteUser = async (req, res) => {
         res.status(500).json({ message: 'Error al eliminar el usuario' });
     }
 };
+
+export const loginUser = async (req, res) => {
+    const { email, password } = req.body;
+
+    try {
+        const user = await new Promise((resolve, reject) => {
+            userService.loginUser(email, password, (err, user) => {
+                if (err) return reject(err);
+                resolve(user);
+            });
+        });
+
+        if (!user) {
+            return res.status(401).json({ message: 'Credenciales incorrectas' });
+        }
+
+        res.status(200).json({ message: 'Login successful', user });
+    } catch (error) {
+        console.error('Error during login:', error.message);
+        res.status(500).json({ message: 'Error during login' });
+    }
+};

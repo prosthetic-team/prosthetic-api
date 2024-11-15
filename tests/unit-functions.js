@@ -106,3 +106,29 @@ export const testDeleteUser = async () => {
     const getResponse = await request(app).get(`/users/${userId}`);
     expect(getResponse.status).to.equal(404);
 };
+
+export const testLoginUserSuccessfully = async() => {
+    const userData = generateUniqueUserData();
+
+    await request(app).post('/users').send(userData);
+
+    const response = await request(app).post('/users/login').send({
+        email: userData.email,
+        password: userData.password
+    });
+
+    expect(response.status).to.equal(200);
+    expect(response.body).to.have.property('message', 'Login successful');
+    expect(response.body).to.have.property('user');
+    expect(response.body.user).to.have.property('email', userData.email);
+};
+
+export const testLoginUserInvalidCredentials = async () => {
+    const response = await request(app).post('/users/login').send({
+        email: 'nonexistent@example.com',
+        password: 'wrongpassword'
+    });
+
+    expect(response.status).to.equal(400);
+    expect(response.body).to.have.property('message', 'Invalid credentials');
+};

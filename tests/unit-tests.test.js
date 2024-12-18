@@ -9,11 +9,18 @@ import {
     testGetUserById,
     testUpdateUser,
     testLoginUserSuccessfully,
-    testLoginUserInvalidCredentials
+    testLoginUserInvalidCredentials,
+    testThingsboardLogin,
+    testTelemetryDataRetrieval
 } from "./unit-functions.js";
 
 // Clear the database before running tests
 before((done) => {
+    clearDatabase(done);
+});
+
+// Clear the database after running tests
+after((done) => {
     clearDatabase(done);
 });
 
@@ -32,4 +39,16 @@ describe('Pruebas unitarias para CRUD de usuarios', () => {
 describe('Prueba unitaria para login de usuario', () => {
     it('Debería permitir login con credenciales válidas', testLoginUserSuccessfully);
     it('No debería permitir login con credenciales inválidas', testLoginUserInvalidCredentials);
+});
+
+import { afterEach } from 'mocha';
+import sinon from 'sinon';
+
+afterEach(() => {
+    sinon.restore();
+});
+
+describe('Pruebas unitarias para integración con Thingsboard API', () => {
+    it('Debería obtener un token válido al iniciar sesión', testThingsboardLogin);
+    it('Debería obtener los datos de telemetría correctamente', testTelemetryDataRetrieval);
 });

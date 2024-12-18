@@ -62,7 +62,7 @@ export const deleteUser = async (id) => {
 
 export const loginUser = async (email, password, callback) => {
     try {
-        const query = 'SELECT * FROM users WHERE email = ?';
+        const query = 'SELECT * FROM users WHERE email = $1';
         const [user] = await db.query(query, [email]);
 
         if (user && await bcrypt.compare(password, user.password)) {

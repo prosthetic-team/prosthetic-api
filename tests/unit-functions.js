@@ -1,6 +1,6 @@
 import { expect } from 'chai';
 import request from 'supertest';
-import app from './app.test.js';
+import app from './app-for-tests.js';
 
 const generateUniqueUserData = () => {
     const timestamp = new Date().getTime();
@@ -129,6 +129,41 @@ export const testLoginUserInvalidCredentials = async () => {
         password: 'wrongpassword'
     });
 
-    expect(response.status).to.equal(400);
+    expect(response.status).to.equal(401);
     expect(response.body).to.have.property('message', 'Invalid credentials');
+};
+
+import sinon from 'sinon';
+import axios from 'axios';
+
+sinon.stub(axios, 'post');
+sinon.stub(axios, 'get');
+
+const baseUrl = 'http://iot.ceisufro.cl:8080';
+
+export const testThingsboardLogin = async () => {
+    const mockToken = 'mockBearerToken';
+    axios.post.resolves({ data: { token: mockToken } });
+
+    const response = await request(app)
+        .post('/thingsboard/login')
+        .send({ username: 'testuser', password: 'password'});
+
+    expect(response.status).to.equal(200);
+    expect(response.body).to.have.property('token', mockToken);
+};
+
+export const testTelemetryDataRetrieval = async () => {
+    const mockTelemetry = {
+        "gyroscope-x": [{ ts: 1730982476951, value: "16.72363" }],
+        "accelerometer-y": [{ ts: 1730982476951, value: "-0.06704949" }]
+    };
+    axios.get.resolves({ data: mockTelemetry });
+
+    const deviceId = '32735bc0-9cfb-11ef-8d2d-4d85475624ac';
+    const response = await request(app).get(`/thingsboard/telemetry/${deviceId}`);
+
+    // Assert
+    expect(response.status).to.equal(200);
+    expect(response.body).to.deep.equal(mockTelemetry);
 };

@@ -14,10 +14,10 @@ export const loginToThingsboard = async (username, password) => {
     }
 };
 
-export const getTelemetryData = async (deviceId, token) => {
+export const getTelemetryData = async (deviceId, keys = '', token) => {
     try {
         const response = await axios.get(
-            `${BASE_URL}/api/plugins/telemetry/DEVICE/${deviceId}/values/timeseries?keys=`,
+            `${BASE_URL}/api/plugins/telemetry/DEVICE/${deviceId}/values/timeseries?keys=${keys}`,
             {
                 headers: { Authorization: `Bearer ${token}` }
             }

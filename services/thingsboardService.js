@@ -1,6 +1,7 @@
 import axios from 'axios';
 
-const BASE_URL = 'http://iot.ceisufro.cl:8080';
+//const BASE_URL = 'http://iot.ceisufro.cl:8080';
+const BASE_URL = 'https://demo.thingsboard.io';
 
 export const loginToThingsboard = async (username, password) => {
     try {

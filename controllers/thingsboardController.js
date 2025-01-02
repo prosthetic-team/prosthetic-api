@@ -1,4 +1,4 @@
-import { loginToThingsboard, getTelemetryData } from '../services/thingsboardService.js';
+import { loginToThingsboard, getTelemetryData, getDevices } from '../services/thingsboardService.js';
 
 export const login = async (req, res) => {
     const { username, password } = req.body;
@@ -27,3 +27,18 @@ export const fetchTelemetry = async (req, res) => {
         res.status(500).json({ message: 'Error al obtener telemetría' });
     }
 };
+
+export const fetchDevices = async (req, res) => {
+    const { deviceId } = req.params;
+    const token = req.headers['authorization']?.split(' ')[1];
+    if (!token) {
+        return res.status(401).json({ message: 'Token missing' });
+    }
+    try {
+        const devices = await getDevices(deviceId, token);
+        res.status(200).json(devices);
+    } catch (error) {
+        console.error(error.message);
+        res.status(500).json({ message: 'Error al obtener dispositivos' });
+    }
+}

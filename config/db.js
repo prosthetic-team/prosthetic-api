@@ -21,11 +21,57 @@ db.none(`
         password TEXT NOT NULL
     );
 `)
-.then(() => {
-    console.log('Connected to PostgreSQL and "users" table created/verified.');
-})
-.catch(error => {
-    console.error('Error setting up the database:', error);
-});
+    .then(() => {
+        console.log('Connected to PostgreSQL and "users" table created/verified.');
+    })
+    .catch(error => {
+        console.error('Error setting up the database:', error);
+    });
+
+// Crear la tabla "devices"
+db.none(`
+    CREATE TABLE IF NOT EXISTS devices (
+        id SERIAL PRIMARY KEY,
+        state TEXT NOT NULL
+    );
+`)
+    .then(() => {
+        console.log('Table "devices" created/verified.');
+    })
+    .catch(error => {
+        console.error('Error creating "devices" table:', error);
+    });
+
+// Crear la tabla "pacients"
+db.none(`
+    CREATE TABLE IF NOT EXISTS pacients (
+        id SERIAL PRIMARY KEY,
+        name TEXT NOT NULL,
+        description TEXT NOT NULL,
+        treatment TEXT NOT NULL,
+        time_of_use TEXT NOT NULL
+    );
+`)
+    .then(() => {
+        console.log('Table "pacients" created/verified.');
+    })
+    .catch(error => {
+        console.error('Error creating "pacients" table:', error);
+    });
+
+// Crear la tabla intermedia "user_pacients" para asignar pacientes a los especialistas
+db.none(`
+    CREATE TABLE IF NOT EXISTS user_pacients (
+        user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+        pacient_id INTEGER REFERENCES pacients(id) ON DELETE CASCADE,
+        PRIMARY KEY (user_id, pacient_id)
+    );
+`)
+    .then(() => {
+        console.log('Table "user_pacients" created/verified.');
+    })
+    .catch(error => {
+        console.error('Error creating "user_pacients" table:', error);
+    });
 
 export default db;

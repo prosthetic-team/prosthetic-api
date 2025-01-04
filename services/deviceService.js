@@ -1,30 +1,25 @@
 import axios from 'axios';
 import db from '../config/db.js';
+import { getDevices } from './thingsboardService.js';
 
 // URL base de la API de ThingsBoard
 const THINGSBOARD_API_URL = 'https://demo.thingsboard.io/api/devices';
-const DEVICE_ID = "f83f4410-bfe0-11ef-af67-a38a7671daf5"
+const device_id = "f83f4410-bfe0-11ef-af67-a38a7671daf5";
 
 // Función para obtener dispositivos desde ThingsBoard
 export const getDevicesFromThingsBoard = async (token) => {
-
+    console.log(token, "token desde getDevicesFromThingsBoard")
     try {
         // Asegúrate de que el token esté disponible
         if (!token) {
-            throw new Error('Token de autenticación no proporcionado');
+            throw new Error('Token de autenticación no proporcionado en obtener desde thingsboard');
         }
-
-        // Construir la URL de la API de ThingsBoard
-        const url = `${THINGSBOARD_API_URL}?deviceIds=${DEVICE_ID}`;
-
-        // Realizar la solicitud GET a la API de ThingsBoard con el encabezado Authorization
-        const response = await axios.get(url, {
-            headers: {
-                Authorization: `Bearer ${token}`
+        const response = await axios.get(
+            `${THINGSBOARD_API_URL}?deviceIds=${device_id}`,
+            {
+                headers: { Authorization: `Bearer ${token}` }
             }
-        });
-
-        // Retornar los datos obtenidos de la API
+        );
         return response.data;
     } catch (error) {
         console.error('Error al obtener dispositivos de ThingsBoard:', error.message);
@@ -32,31 +27,22 @@ export const getDevicesFromThingsBoard = async (token) => {
     }
 };
 
-// Función para obtener todos los dispositivos
-export const getAllDevices = async (token) => {
-    try {
-        const devices = await getDevicesFromThingsBoard(token);  // Aquí puedes pasar un parámetro vacío para obtener todos los dispositivos
-        return devices;
-    } catch (error) {
-        throw new Error('Error al obtener dispositivos de ThingsBoard: ' + error.message);
-    }
-};
-
 // Función para obtener dispositivos disponibles
 export const getAvailableDevices = async (token) => {
     try {
         // Obtener todos los dispositivos desde ThingsBoard
-        const devicesFromThingsBoard = await getDevicesFromThingsBoard(token);
-
+        const devicesFromThingsBoard = await getDevices(device_id, token);
+        console.log(devicesFromThingsBoard, "respuesta 1 dispositivo de la api de thingsboard")
         // Filtrar los dispositivos que no tienen estado 'no disponible'
         const availableDevices = [];
 
         for (let device of devicesFromThingsBoard) {
             const deviceId = device.id.id;  // Obtener la ID del dispositivo de la respuesta de ThingsBoard
+            console.log(deviceId, "respuesta 2 id del dispositivo desde la response de things")
 
             // Consultar la base de datos para obtener el estado del dispositivo
             const dbDevice = await db.oneOrNone('SELECT * FROM devices WHERE id = $1', [deviceId]);
-
+            console.log(dbDevice, "respuesta 3 de la base de datos")
             // Si el dispositivo existe en la base de datos y su estado no es "no disponible"
             if (dbDevice && dbDevice.state !== 'no disponible') {
                 availableDevices.push({
@@ -95,29 +81,13 @@ export const updateDeviceState = async (deviceId, newState) => {
     }
 };
 
-// Asignar un dispositivo a un paciente y marcarlo como "no disponible"
-export const assignDeviceToPacient = async (deviceId) => {
-    try {
-        // Verificamos si el dispositivo está disponible antes de asignarlo
-        const isAvailable = await isDeviceAvailable(deviceId);
-        if (!isAvailable) {
-            throw new Error('El dispositivo ya está asignado o no disponible');
-        }
-
-        // Cambiar el estado del dispositivo a "no disponible"
-        await updateDeviceState(deviceId, 'no disponible');
-    } catch (error) {
-        console.error('Error al asignar dispositivo al paciente:', error.message);
-        throw error;
-    }
-};
-
 // Función para obtener un dispositivo específico desde ThingsBoard
 export const getDeviceById = async (deviceId, token) => {
+    console.log(deviceId, "id del dispositivo");
+    console.log(token, "token")
     try {
-        // Asegúrate de que el token esté disponible
         if (!token) {
-            throw new Error('Token de autenticación no proporcionado');
+            throw new Error('Token de autenticación no proporcionado en obtener por id');
         }
 
         // Construir la URL de la API de ThingsBoard para obtener un dispositivo específico
@@ -142,8 +112,6 @@ export const getDeviceById = async (deviceId, token) => {
 
 export default {
     getDevicesFromThingsBoard,
-    getAllDevices,
-    assignDeviceToPacient,
     getAvailableDevices,
     updateDeviceState,
     getDeviceById

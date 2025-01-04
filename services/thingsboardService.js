@@ -45,6 +45,8 @@ export const getTelemetryData = async (deviceId, keys = '', token) => {
 };
 
 export const getDevices = async (deviceIds, token) => {
+    const ruta = `${BASE_URL}/api/devices?deviceIds=${deviceIds}`;
+    console.log(ruta);
     try {
         const response = await axios.get(
             `${BASE_URL}/api/devices?deviceIds=${deviceIds}`,

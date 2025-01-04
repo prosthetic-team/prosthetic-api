@@ -1,18 +1,33 @@
 import db from '../config/db.js';
-import thingsboardService from './thingsboardService.js';
+import { getDevices } from './thingsboardService.js';
+import { updateDeviceState } from './deviceService.js';
 
 // Función para crear un paciente
-export const createPacient = async (pacientData, token, callback) => {
+export const createPacient = async (pacientData, token) => {
     try {
-        // Insertar el paciente en la tabla "pacients"
+        // Verificar si el especialista existe
+        const user = await db.oneOrNone('SELECT id FROM users WHERE id = $1', [pacientData.especialistaId]);
+
+        if (!user) {
+            throw new Error('Especialista no encontrado');
+        }
+
+        // Insertar el paciente en la tabla "pacients" con el "device_id"
         const result = await db.one(
-            `INSERT INTO pacients (name, description, treatment, time_of_use)
-             VALUES ($1, $2, $3, $4) RETURNING id`,
-            [pacientData.nombreCompleto, pacientData.descripcion, pacientData.tratamiento, pacientData.tiempoUsoDiario]
+            `INSERT INTO pacients (name, email, description, treatment, time_of_use, device_id)
+             VALUES ($1, $2, $3, $4, $5, $6) RETURNING id`,
+            [
+                pacientData.nombreCompleto,
+                pacientData.email,
+                pacientData.descripcion,
+                pacientData.tratamiento,
+                pacientData.tiempoUsoDiario,
+                pacientData.dispositivoId
+            ]
         );
 
         // Obtener el dispositivo desde ThingsBoard
-        const devices = await thingsboardService.getDevices(pacientData.dispositivoId, token);
+        const devices = await getDevices(pacientData.dispositivoId, token);
 
         // Si el dispositivo no existe o no está disponible, lanzar error
         if (!devices || devices.length === 0) {
@@ -22,13 +37,7 @@ export const createPacient = async (pacientData, token, callback) => {
         const device = devices[0]; // Asumimos que se devuelve un dispositivo como un arreglo
 
         // Cambiar el estado del dispositivo a "no disponible"
-        await db.none(`UPDATE devices SET state = 'no disponible' WHERE id = $1`, [pacientData.dispositivoId]);
-
-        // Asignar el dispositivo al paciente
-        await db.none(
-            `INSERT INTO pacient_devices (pacient_id, device_id) VALUES ($1, $2)`,
-            [result.id, pacientData.dispositivoId]
-        );
+        await updateDeviceState(pacientData.dispositivoId, 'no disponible');
 
         // Asignar el paciente al especialista (usuario)
         await db.none(
@@ -37,10 +46,10 @@ export const createPacient = async (pacientData, token, callback) => {
         );
 
         // Retornar el ID del paciente creado
-        callback(null, { pacientId: result.id });
+        return result.id;
     } catch (error) {
         console.error('Error creating pacient:', error.message);
-        callback(error);
+        throw error; // Lanzamos el error para que lo maneje el controlador
     }
 };
 
@@ -56,7 +65,7 @@ export const getAllPacients = async () => {
 };
 
 // Función para obtener un paciente por ID
-export const getPacientById = async (id) => {
+export const getPacientByIdService = async (id) => {
     try {
         const pacient = await db.oneOrNone('SELECT * FROM pacients WHERE id = $1', [id]);
         return pacient;
@@ -66,8 +75,37 @@ export const getPacientById = async (id) => {
     }
 };
 
+export const updatePacientById = async (id, updatedPacient) => {
+    try {
+        await db.none(
+            `UPDATE pacients SET name = $1, description = $2, treatment = $3, time_of_use = $4 WHERE id = $5`,
+            [
+                updatedPacient.nombreCompleto,
+                updatedPacient.descripcion,
+                updatedPacient.tratamiento,
+                updatedPacient.tiempoUsoDiario,
+                id
+            ]
+        );
+    } catch (err) {
+        console.error('Error updating pacient:', err.message);
+        throw err;
+    }
+}
+
+export const deletePacientById = async (id) => {
+    try {
+        await db.none('DELETE FROM pacients WHERE id = $1', [id]);
+    } catch (err) {
+        console.error('Error deleting pacient:', err.message);
+        throw err;
+    }
+}
+
 export default {
     createPacient,
     getAllPacients,
-    getPacientById
+    getPacientByIdService,
+    updatePacientById,
+    deletePacientById
 };

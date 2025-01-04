@@ -13,6 +13,7 @@ const db = pgp({
     port: parseInt(process.env.DB_PORT, 10)
 });
 
+// Crear la tabla "users"
 db.none(`
     CREATE TABLE IF NOT EXISTS users (
         id SERIAL PRIMARY KEY,
@@ -22,16 +23,16 @@ db.none(`
     );
 `)
     .then(() => {
-        console.log('Connected to PostgreSQL and "users" table created/verified.');
+        console.log('Table "users" created/verified.');
     })
     .catch(error => {
-        console.error('Error setting up the database:', error);
+        console.error('Error creating "users" table:', error);
     });
 
 // Crear la tabla "devices"
 db.none(`
     CREATE TABLE IF NOT EXISTS devices (
-        id SERIAL PRIMARY KEY,
+        id UUID PRIMARY KEY,
         state TEXT NOT NULL
     );
 `)
@@ -47,19 +48,21 @@ db.none(`
     CREATE TABLE IF NOT EXISTS pacients (
         id SERIAL PRIMARY KEY,
         name TEXT NOT NULL,
+        email TEXT NOT NULL,
         description TEXT NOT NULL,
         treatment TEXT NOT NULL,
-        time_of_use TEXT NOT NULL
+        time_of_use TEXT NOT NULL,
+        device_id UUID REFERENCES devices(id) ON DELETE SET NULL
     );
 `)
     .then(() => {
-        console.log('Table "pacients" created/verified.');
+        console.log('Table "pacients" created/verified with "device_id" as UUID.');
     })
     .catch(error => {
-        console.error('Error creating "pacients" table:', error);
+        console.error('Error creating "pacients" table with "device_id":', error);
     });
 
-// Crear la tabla intermedia "user_pacients" para asignar pacientes a los especialistas
+// Crear la tabla intermedia "user_pacients"
 db.none(`
     CREATE TABLE IF NOT EXISTS user_pacients (
         user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,

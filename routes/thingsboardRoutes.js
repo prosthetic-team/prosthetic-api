@@ -12,4 +12,6 @@ router.get('/telemetry/:deviceId', fetchTelemetry);
 // Devices(1 de momento) route
 router.get('/devices/:deviceId', fetchDevices);
 
+//agregar ruta para obtener el historial diario de tiempo activo de un dispositivo durante un día
+
 export default router;

@@ -1,5 +1,6 @@
 import db from '../config/db.js';
 import { encryptService } from './encryptService.js';
+import { loginToThingsboard } from './thingsboardService.js';
 
 // Función para insertar un usuario con contraseña encriptada
 export const insertUser = async (userData, callback) => {
@@ -73,7 +74,9 @@ export const loginUser = async (email, password) => {
             throw new Error('Invalid credentials');
         }
 
-        return { id: user.id, name: user.name, email: user.email };
+        const token = await loginToThingsboard();
+
+        return { id: user.id, token };
     } catch (error) {
         console.error('Error during login:', error.message);
         throw error;

@@ -1,14 +1,14 @@
 import axios from 'axios';
+import dotenv from 'dotenv';
 
 //const BASE_URL = 'http://iot.ceisufro.cl:8080';
 const BASE_URL = 'https://demo.thingsboard.io';
 
-
-export const loginToThingsboard = async (username, password) => {
+export const loginToThingsboard = async () => {
     try {
         const response = await axios.post(`${BASE_URL}/api/auth/login`, {
-            username,
-            password
+            username: process.env.THINGSBOARD_USER,
+            password: process.env.THINGSBOARD_PASSWORD
         });
         return response.data.token;
     } catch (error) {

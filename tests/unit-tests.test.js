@@ -1,5 +1,5 @@
 
-import { describe, it } from "mocha";
+import { describe, it, before, after } from "mocha";
 import { clearDatabase } from "./db-setup.test.js";
 import {
     testCreateUserSuccessfully,
@@ -39,13 +39,6 @@ describe('Pruebas unitarias para CRUD de usuarios', () => {
 describe('Prueba unitaria para login de usuario', () => {
     it('Debería permitir login con credenciales válidas', testLoginUserSuccessfully);
     it('No debería permitir login con credenciales inválidas', testLoginUserInvalidCredentials);
-});
-
-import { afterEach } from 'mocha';
-import sinon from 'sinon';
-
-afterEach(() => {
-    sinon.restore();
 });
 
 describe('Pruebas unitarias para integración con Thingsboard API', () => {

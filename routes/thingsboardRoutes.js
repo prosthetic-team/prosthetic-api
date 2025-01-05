@@ -1,5 +1,5 @@
 import express from 'express';
-import { login, fetchTelemetry, fetchDevices } from '../controllers/thingsboardController.js';
+import { login, fetchTelemetry, fetchDevices, getMovingHours } from '../controllers/thingsboardController.js';
 
 const router = express.Router();
 
@@ -12,6 +12,6 @@ router.get('/telemetry/:deviceId', fetchTelemetry);
 // Devices(1 de momento) route
 router.get('/devices/:deviceId', fetchDevices);
 
-//agregar ruta para obtener el historial diario de tiempo activo de un dispositivo durante un día
+router.get('/movinghours/:deviceId', getMovingHours);
 
 export default router;

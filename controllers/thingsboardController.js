@@ -1,4 +1,4 @@
-import { loginToThingsboard, getTelemetryData, getDevices } from '../services/thingsboardService.js';
+import { loginToThingsboard, getTelemetryData, getDevices, calculateMovingHours } from '../services/thingsboardService.js';
 
 export const login = async (req, res) => {
     const { username, password } = req.body;
@@ -25,6 +25,23 @@ export const fetchTelemetry = async (req, res) => {
     } catch (error) {
         console.error(error.message);
         res.status(500).json({ message: 'Error al obtener telemetría' });
+    }
+};
+
+export const getMovingHours = async (req, res) => {
+    const { deviceId } = req.params;
+    const token = req.headers['authorization']?.split(' ')[1];
+
+    if (!token) {
+        return res.status(401).json({ message: 'Token missing' });
+    }
+
+    try {
+        const movingHours = await calculateMovingHours(deviceId, token);
+        res.status(200).json(movingHours);
+    }catch (error) {
+        console.error(error.message);
+        res.status(500).json({ message: 'Error al calcular horas de movimiento' });
     }
 };
 

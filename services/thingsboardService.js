@@ -59,3 +59,66 @@ export const getDevices = async (deviceIds, token) => {
         throw new Error('Error al obtener datos de dispositivos: ' + error.message);
     }
 };
+
+export const calculateMovingHours = async (deviceId, token) => {
+    const endTs = new Date().getTime();
+    const startTs = endTs - (24 * 60 * 60 * 1000);
+
+    console.log('Start Time:', startTs);
+    console.log('End Time:', endTs);
+
+    try {
+        const response = await axios.get(
+            `${BASE_URL}/api/plugins/telemetry/DEVICE/${deviceId}/values/timeseries?keys=moving&startTs=${startTs}&endTs=${endTs}&intervalType=MILLISECONDS&interval=100&agg=NONE&orderBy=ASC`,
+            {
+                headers: { Authorization: `Bearer ${token}` },
+            }
+        );
+        const telemetryData = response.data;
+
+        if (!telemetryData || !telemetryData.moving) {
+            console.log('No data available for the "moving" key.');
+            return 0;
+        }
+
+        const movingData = telemetryData.moving;
+        let totalTrueDuration = 0;
+
+        for (let i = 0; i < movingData.length - 1; i++) {
+            const current = movingData[i];
+            const next = movingData[i + 1];
+
+            if (current.value === 'true') {
+                const currentTimestamp = parseInt(current.ts, 10);
+                const nextTimestamp = parseInt(next.ts, 10);
+                totalTrueDuration += nextTimestamp - currentTimestamp;
+                console.log('Current:', currentTimestamp, 'Next:', nextTimestamp, 'Duration:', nextTimestamp - currentTimestamp);
+            }
+        }
+
+        const totalHours = totalTrueDuration / (1000 * 60 * 60);
+        return totalHours;
+    } catch (error) {
+        console.error('Error calculating moving hours:', error.message);
+        if (error.response) {
+            console.error('Response error:', error.response.data);
+        }
+        return 0;
+    }
+};
+
+
+const handleAxiosError = (error, customMessage) => {
+    if (error.response) {
+        console.error(`${customMessage}:`, error.response.data);
+        console.error('Status code:', error.response.status);
+        console.error('Headers:', error.response.headers);
+        throw new Error(`${customMessage}: ${error.response.data.message || error.message}`);
+    } else if (error.request) {
+        console.error('No response received:', error.request);
+        throw new Error('No response received from server.');
+    } else {
+        console.error('Configuration error:', error.message);
+        throw new Error(`Configuration error: ${error.message}`);
+    }
+};

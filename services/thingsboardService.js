@@ -122,3 +122,18 @@ const handleAxiosError = (error, customMessage) => {
         throw new Error(`Configuration error: ${error.message}`);
     }
 };
+
+// obtener estado del dispositivo
+export const getDeviceState = async (deviceId, token) => {
+    try {
+        const response = await axios.get(
+            `${BASE_URL}/api/device/info/${deviceId}`,
+            {
+                headers: { Authorization: `Bearer ${token}` }
+            }
+        );
+        return response.data.active;
+    } catch (error) {
+        handleAxiosError(error, 'Error al obtener estado del dispositivo');
+    }
+};

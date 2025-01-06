@@ -1,4 +1,4 @@
-import { getAllPacients, createPacient, getPacientByIdService, deletePacientById, updatePacientById } from '../services/pacientService.js';
+import { getAllPacients, createPacient, getPacientByIdService, deletePacientById, updatePacientById, getTimeOfUse, getCompletedTreatments } from '../services/pacientService.js';
 import { getDevices } from '../services/thingsboardService.js';
 
 // Crear paciente
@@ -79,5 +79,32 @@ export const deletePacient = async (req, res) => {
     } catch (error) {
         console.error('Error al eliminar el paciente:', error.message);
         res.status(500).json({ message: 'Error al eliminar el paciente' });
+    }
+};
+
+// Obtener tiempo de uso
+export const getPacientTimeOfUse = async (req, res) => {
+    const { id } = req.params;
+    const token = req.headers['authorization']?.split(' ')[1];
+    const { device_id } = req.query;
+
+    try {
+        const timeOfUse = await getTimeOfUse(id, device_id, token);
+        res.status(200).json(timeOfUse);
+    } catch (error) {
+        console.error(error.message);
+        res.status(500).json({ message: 'Error al obtener tiempo de uso' });
+    }
+};
+
+// Obtener tratamientos completados
+export const getCompletedTreatmentsController = async (req, res) => {
+    const token = req.headers['authorization']?.split(' ')[1];
+    try {
+        const completedTreatments = await getCompletedTreatments(token);
+        res.status(200).json(completedTreatments);
+    } catch (error) {
+        console.error(error.message);
+        res.status(500).json({ message: 'Error al obtener tratamientos completados' });
     }
 };

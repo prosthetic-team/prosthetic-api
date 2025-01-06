@@ -1,6 +1,7 @@
 import db from '../config/db.js';
 import { getDevices } from './thingsboardService.js';
 import { updateDeviceState } from './deviceService.js';
+import { calculateMovingHours } from './thingsboardService.js';
 
 // Función para crear un paciente
 export const createPacient = async (pacientData, token) => {
@@ -102,10 +103,50 @@ export const deletePacientById = async (id) => {
     }
 }
 
+export const getTimeOfUse = async (id, device_id, token) => {
+    try {
+        const movingHours = await calculateMovingHours(device_id, token);
+        const pacient = await db.oneOrNone('SELECT * FROM pacients WHERE id = $1', [id]);
+        return {
+            pacientId: pacient.id,  // id del paciente
+            timeOfUse: pacient.time_of_use,  // tiempo de uso
+            movingHours  // horas de movimiento
+        };
+    } catch (err) {
+        console.error('Error fetching moving hours:', err.message);
+        throw err;
+    }
+
+};
+
+//crear servicio que sea capaz de obtener la cantidad de pacientes que completo las horas de tratamiento diario con el servicio getMovingHours y con GetAllPacients, cuando getMovingHours sea mayor o igual a tiempoUsoDiario de cada paciente, se debe contar como un paciente que completo el tratamiento
+export const getCompletedTreatments = async (token) => {
+    console.log('Getting completed treatments...');
+    try {
+        console.log('Getting all pacients...');
+        const pacients = await getAllPacients();
+        console.log(pacients);
+        let completedTreatments = 0;
+        for (let pacient of pacients) {
+            const movingHours = await calculateMovingHours(pacient.device_id, token);
+            if (movingHours >= pacient.time_of_use) {
+                completedTreatments++;
+            }
+        }
+        return completedTreatments;
+    } catch (err) {
+        console.error('Error fetching completed treatments:', err.message);
+        throw err;
+    }
+};
+
+
 export default {
     createPacient,
     getAllPacients,
     getPacientByIdService,
     updatePacientById,
-    deletePacientById
+    deletePacientById,
+    getTimeOfUse,
+    getCompletedTreatments
 };

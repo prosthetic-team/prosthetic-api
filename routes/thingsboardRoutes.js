@@ -1,5 +1,5 @@
 import express from 'express';
-import { login, fetchTelemetry, fetchDevices, getMovingHours } from '../controllers/thingsboardController.js';
+import { login, fetchTelemetry, fetchDevices, getMovingHours, isActive } from '../controllers/thingsboardController.js';
 
 const router = express.Router();
 
@@ -13,5 +13,7 @@ router.get('/telemetry/:deviceId', fetchTelemetry);
 router.get('/devices/:deviceId', fetchDevices);
 
 router.get('/movinghours/:deviceId', getMovingHours);
+
+router.get('/isactive/:deviceId', isActive);
 
 export default router;

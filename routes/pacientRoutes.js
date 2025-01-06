@@ -4,7 +4,9 @@ import {
     getPacients,
     getPacientById,
     updatePacient,
-    deletePacient
+    deletePacient,
+    getPacientTimeOfUse,
+    getCompletedTreatmentsController
 } from '../controllers/pacientController.js';
 
 const router = express.Router();
@@ -23,5 +25,11 @@ router.put('/:id', updatePacient);
 
 // Eliminar un paciente
 router.delete('/:id', deletePacient);
+
+// Obtener tiempo de uso de un paciente
+router.get('/:id/time-of-use', getPacientTimeOfUse);
+
+// Obtener tratamientos completados
+router.get('/completed-treatments/all', getCompletedTreatmentsController);
 
 export default router;

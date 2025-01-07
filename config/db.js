@@ -30,6 +30,12 @@ const initDb = async () => {
         `);
         console.log('Table "devices" created/verified.');
 
+        await db.none(`
+            INSERT INTO devices (id, state) VALUES ('f83f4410-bfe0-11ef-af67-a38a7671daf5', 'disponible')
+            ON CONFLICT (id) DO NOTHING;
+        `);
+        console.log('Initial device inserted.');
+
         // Create pacients table
         await db.none(`
             CREATE TABLE IF NOT EXISTS pacients (

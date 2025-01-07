@@ -1,5 +1,6 @@
 import db from '../config/db.js';
 import { encryptService } from './encryptService.js';
+import { loginToThingsboard } from './thingsboardService.js';
 
 // Función para insertar un usuario con contraseña encriptada
 export const insertUser = async (userData, callback) => {
@@ -60,18 +61,25 @@ export const deleteUser = async (id) => {
     }
 };
 
-export const loginUser = async (email, password, callback) => {
+export const loginUser = async (email, password) => {
     try {
-        const query = 'SELECT * FROM users WHERE email = ?';
-        const [user] = await db.query(query, [email]);
-
-        if (user && await bcrypt.compare(password, user.password)) {
-            callback(null, { id: user.id, name: user.name, email: user.email });
-        } else {
-            callback(new Error('Invalid credentials'));
+        const user = await db.oneOrNone('SELECT * FROM users WHERE email = $1', [email]);
+        
+        if (!user) {
+            throw new Error('Invalid credentials');
         }
+
+        const isValid = await encryptService.verifyPassword(user.password, password);
+        if (!isValid) {
+            throw new Error('Invalid credentials');
+        }
+
+        const token = await loginToThingsboard();
+
+        return { id: user.id, token };
     } catch (error) {
-        callback(error);
+        console.error('Error during login:', error.message);
+        throw error;
     }
 };
 

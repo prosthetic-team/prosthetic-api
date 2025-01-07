@@ -1,6 +1,21 @@
 import { expect } from 'chai';
 import request from 'supertest';
-import app from './app.test.js';
+import app from './app-for-tests.js';
+import sinon from 'sinon';
+import axios from 'axios';
+
+const baseUrl = 'http://iot.ceisufro.cl:8080';
+
+// Setup stubs before tests
+beforeEach(() => {
+    sinon.stub(axios, 'post');
+    sinon.stub(axios, 'get');
+});
+
+// Cleanup stubs after tests
+afterEach(() => {
+    sinon.restore();
+});
 
 const generateUniqueUserData = () => {
     const timestamp = new Date().getTime();
@@ -107,28 +122,75 @@ export const testDeleteUser = async () => {
     expect(getResponse.status).to.equal(404);
 };
 
-export const testLoginUserSuccessfully = async() => {
-    const userData = generateUniqueUserData();
+export const testLoginUserSuccessfully = async () => {
+    try {
+        const userData = generateUniqueUserData();
+        
+        // Create user first
+        const createResponse = await request(app)
+            .post('/users')
+            .send(userData);
+        
+        expect(createResponse.status).to.equal(201);
 
-    await request(app).post('/users').send(userData);
+        // Attempt login
+        const loginResponse = await request(app)
+            .post('/users/login')
+            .send({
+                email: userData.email,
+                password: userData.password
+            });
 
-    const response = await request(app).post('/users/login').send({
-        email: userData.email,
-        password: userData.password
-    });
-
-    expect(response.status).to.equal(200);
-    expect(response.body).to.have.property('message', 'Login successful');
-    expect(response.body).to.have.property('user');
-    expect(response.body.user).to.have.property('email', userData.email);
+        expect(loginResponse.status).to.equal(200);
+        expect(loginResponse.body).to.have.property('user');
+        expect(loginResponse.body.user).to.have.property('email', userData.email);
+    } catch (error) {
+        console.error('Login test error:', error);
+        throw error;
+    }
 };
 
 export const testLoginUserInvalidCredentials = async () => {
-    const response = await request(app).post('/users/login').send({
-        email: 'nonexistent@example.com',
-        password: 'wrongpassword'
-    });
+    try {
+        const loginResponse = await request(app)
+            .post('/users/login')
+            .send({
+                email: 'nonexistent@example.com',
+                password: 'wrongpassword'
+            });
 
-    expect(response.status).to.equal(400);
-    expect(response.body).to.have.property('message', 'Invalid credentials');
+        expect(loginResponse.status).to.equal(401);
+        expect(loginResponse.body).to.have.property('message', 'Invalid credentials');
+    } catch (error) {
+        console.error('Invalid credentials test error:', error);
+        throw error;
+    }
+};
+
+
+export const testThingsboardLogin = async () => {
+    const mockToken = 'mockBearerToken';
+    axios.post.resolves({ data: { token: mockToken } });
+
+    const response = await request(app)
+        .post('/thingsboard/login')
+        .send({ username: 'testuser', password: 'password'});
+
+    expect(response.status).to.equal(200);
+    expect(response.body).to.have.property('token', mockToken);
+};
+
+export const testTelemetryDataRetrieval = async () => {
+    const mockTelemetry = {
+        "gyroscope-x": [{ ts: 1730982476951, value: "16.72363" }],
+        "accelerometer-y": [{ ts: 1730982476951, value: "-0.06704949" }]
+    };
+    axios.get.resolves({ data: mockTelemetry });
+
+    const deviceId = '32735bc0-9cfb-11ef-8d2d-4d85475624ac';
+    const response = await request(app).get(`/thingsboard/telemetry/${deviceId}`);
+
+    // Assert
+    expect(response.status).to.equal(200);
+    expect(response.body).to.deep.equal(mockTelemetry);
 };

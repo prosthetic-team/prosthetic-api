@@ -5,13 +5,7 @@ dotenv.config();
 
 const pgp = pgPromise();
 
-const db = pgp({
-    user: process.env.DB_USER,
-    host: process.env.DB_HOST,
-    database: process.env.DB_DATABASE,
-    password: process.env.DB_PASSWORD,
-    port: parseInt(process.env.DB_PORT, 10)
-});
+const db = pgp(process.env.DB_URL);
 
 // Initialize database tables
 const initDb = async () => {
@@ -35,6 +29,12 @@ const initDb = async () => {
             );
         `);
         console.log('Table "devices" created/verified.');
+
+        await db.none(`
+            INSERT INTO devices (id, state) VALUES ('f83f4410-bfe0-11ef-af67-a38a7671daf5', 'disponible')
+            ON CONFLICT (id) DO NOTHING;
+        `);
+        console.log('Initial device inserted.');
 
         // Create pacients table
         await db.none(`

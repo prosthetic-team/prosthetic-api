@@ -26,7 +26,7 @@ app.use((err, req, res, next) => {
 });
 
 // Puerto donde el servidor va a escuchar
-const port = 3000;
+const port = process.env.PORT || 3000;
 app.listen(port, () => {
     console.log(`Servidor corriendo en http://localhost:${port}`);
 });

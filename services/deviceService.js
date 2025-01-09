@@ -81,6 +81,20 @@ export const updateDeviceState = async (deviceId, newState) => {
     }
 };
 
+export const updateDeviceStateAvailable = async (deviceId) => {
+    if (deviceId) {
+        console.log(`Actualizando el estado del dispositivo con ID: ${deviceId} a "disponible"`);
+        try {
+            await db.none(`
+                UPDATE devices SET state = 'disponible' WHERE id = $1
+            `, [deviceId]);
+            console.log(`Dispositivo con ID: ${deviceId} actualizado correctamente.`);
+        } catch (updateErr) {
+            console.error(`Error actualizando el dispositivo con ID: ${deviceId}`, updateErr.message);
+        }
+    }
+};
+
 // Función para obtener un dispositivo específico desde ThingsBoard
 export const getDeviceById = async (deviceId, token) => {
     console.log(deviceId, "id del dispositivo");
@@ -114,5 +128,6 @@ export default {
     getDevicesFromThingsBoard,
     getAvailableDevices,
     updateDeviceState,
-    getDeviceById
+    getDeviceById,
+    updateDeviceStateAvailable
 };

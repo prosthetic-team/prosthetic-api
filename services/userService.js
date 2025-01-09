@@ -1,6 +1,7 @@
 import db from '../config/db.js';
 import { encryptService } from './encryptService.js';
 import { loginToThingsboard } from './thingsboardService.js';
+import { deletePacients } from './pacientService.js';
 
 // Función para insertar un usuario con contraseña encriptada
 export const insertUser = async (userData, callback) => {
@@ -52,19 +53,48 @@ export const updateUser = async (id, updatedData) => {
     }
 };
 
-// Función para eliminar un usuario
+// Funciones asociadas a la eliminación de un usuario
 export const deleteUser = async (id) => {
     try {
+        // Primero, eliminamos los pacientes asociados al usuario
+        const pacientesEliminados = await deletePacients(id);
+
+        if (!pacientesEliminados) {
+            console.log('Error: No se pudieron eliminar los pacientes antes de eliminar al usuario.');
+            return; // Si no se eliminaron los pacientes, detenemos el flujo
+        }
+
+        // Luego, eliminamos las relaciones entre el usuario y los pacientes
+        await deleteUserPacientsRelations(id);
+
+        // Finalmente, eliminamos al usuario
         await db.none(`DELETE FROM users WHERE id = $1`, [id]);
+
+        console.log(`Usuario con ID ${id} eliminado correctamente.`);
     } catch (err) {
         console.error('Error deleting user:', err.message);
     }
 };
 
+// Función para eliminar las relaciones entre el usuario y los pacientes
+const deleteUserPacientsRelations = async (userId) => {
+    try {
+        await db.none(`
+            DELETE FROM user_pacients WHERE user_id = $1
+        `, [userId]);
+        console.log(`Relaciones entre usuario y pacientes eliminadas.`);
+    } catch (err) {
+        console.error('Error deleting user-pacients relations:', err.message);
+        throw err;
+    }
+};
+
+//-----------------------------------------------------------------
+
 export const loginUser = async (email, password) => {
     try {
         const user = await db.oneOrNone('SELECT * FROM users WHERE email = $1', [email]);
-        
+
         if (!user) {
             throw new Error('Invalid credentials');
         }

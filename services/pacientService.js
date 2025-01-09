@@ -2,6 +2,7 @@ import db from '../config/db.js';
 import { getDevices } from './thingsboardService.js';
 import { updateDeviceState } from './deviceService.js';
 import { calculateMovingHours } from './thingsboardService.js';
+import { updateDeviceStateAvailable } from './deviceService.js';
 
 // Función para crear un paciente
 export const createPacient = async (pacientData, token) => {
@@ -140,6 +141,71 @@ export const getCompletedTreatments = async (token) => {
     }
 };
 
+// Función para obtener las IDs de los pacientes asociados a un user_id
+const getPacientIds = async (userId) => {
+    console.log(`Obteniendo todas las IDs de los pacientes asociados al usuario con ID: ${userId}`);
+    const pacientIds = await db.any(`
+        SELECT pacient_id FROM user_pacients WHERE user_id = $1
+    `, [userId]);
+
+    console.log(`Pacientes asociados encontrados: ${pacientIds.length}`);
+    return pacientIds.map(p => p.pacient_id);
+};
+
+// Función para obtener los pacientes con sus dispositivos
+const getPacientsWithDevices = async (pacientIdsList) => {
+    console.log(`Obteniendo pacientes con dispositivos asociados...`);
+    return await db.any(`
+        SELECT id, device_id FROM pacients WHERE id IN ($1:csv)
+    `, [pacientIdsList]);
+};
+
+// Función para eliminar los pacientes por sus IDs
+const deletePacientsByIds = async (pacientIdsList) => {
+    console.log(`Eliminando pacientes...`);
+    await db.none(`
+        DELETE FROM pacients WHERE id IN ($1:csv)
+    `, [pacientIdsList]);
+    console.log(`Pacientes eliminados.`);
+};
+
+// Función principal para eliminar los pacientes al eliminar un usuario (especialista)
+export const deletePacients = async (userId) => {
+    try {
+        // Obtener las IDs de los pacientes asociados al usuario
+        const pacientIdsList = await getPacientIds(userId);
+
+        if (pacientIdsList.length === 0) {
+            console.log(`No se encontraron pacientes asociados al usuario con ID: ${userId}`);
+            return false; // Si no hay pacientes, retornamos false
+        }
+
+        // Obtener los pacientes con dispositivos asociados
+        const pacients = await getPacientsWithDevices(pacientIdsList);
+
+        // Si no hay pacientes con dispositivos asociados, devolver false
+        if (pacients.length === 0) {
+            console.log(`No se encontraron pacientes con dispositivos asociados.`);
+            return false;
+        }
+
+        // Actualizar los dispositivos a "disponible"
+        for (let pacient of pacients) {
+            await updateDeviceStateAvailable(pacient.device_id);
+        }
+
+        // Eliminar los pacientes
+        await deletePacientsByIds(pacientIdsList);
+
+        console.log(`Pacientes eliminados correctamente para el usuario con ID: ${userId}`);
+
+        return true; // Si todo el proceso fue exitoso, retornamos true
+    } catch (err) {
+        console.error('Error al eliminar pacientes:', err.message);
+        return false; // En caso de error, retornamos false
+    }
+};
+
 
 export default {
     createPacient,
@@ -148,5 +214,6 @@ export default {
     updatePacientById,
     deletePacientById,
     getTimeOfUse,
-    getCompletedTreatments
+    getCompletedTreatments,
+    deletePacients
 };

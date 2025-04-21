@@ -5,7 +5,6 @@ export class encryptService {
     static async hashPassword(password) {
         try {
             const hashedPassword = await argon2.hash(password);
-            console.log('Contraseña hasheada ' + hashedPassword);
             return hashedPassword;
         } catch (error) {
             console.log('Error al hashear la contraseña' + error);
